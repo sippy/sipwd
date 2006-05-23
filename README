@@ -1,0 +1,68 @@
+I. About
+
+This is simple watchdog application to periodically check the presence of
+some daemons and start them if necessary. It proved itself very useful for
+monitoring complex C programs (SER, rtpproxy, etc) that can die from 
+time to time due to some bugs in code (as we know shit happens).
+
+
+II. Usage
+
+The usage is simple - the sipwd should be started periodically (for example
+each minute by cron(8)) for each of the programs to be monitored. All
+necessary arguments are passed via the command line. The synopsis is as
+follows:
+
+sipwd <runfile> <binfile> <pidfile> <command>
+
+The <runfile> argument is the name of the file which indicates that the
+service has been started. If <runfile> doesn't exist the watchdog just exits.
+
+The <binfile> argument is the name of the binary corresponding to the service
+to be checked. The watchdog uses procfs to verify that the name of the binary
+running matches the <binfile>. For interpreted languages, like python or perl,
+<binfile> should be name of the interpreter, not name of the script.
+
+The <pidfile> argument is name of the file which contains one of more PIDs
+corresponding for the service. The watchdog checks that all of those PIDs
+correspond to the running processes, whose binaries match <binfile>.
+
+The <command> argument is the command to start the service in the case when
+watchdog finds that it is not running.
+
+For example, the following command can be used to monitor rtpproxy service:
+
+sipwd /var/run/rtpproxy.runs /usr/local/bin/rtpproxy \
+/var/run/rtpproxy.pid "/usr/local/etc/rc.d/rtpproxy.sh start"
+
+The watchdog uses siplog library to report its activity, so that SIPLOG_BEND and
+SIPLOG_LOGFILE_FILE environment variables can be set accordingly to modify its
+behavior.
+
+Integration should be quite simple:
+
+1. Install sipwd.
+
+2. Make sure that procfs is mounted and enabled in /etc/fstab.
+
+3. Modify startup scripts of services to be monitored to create/remove
+<runfile> on start/stop, for example:
+
+----
+case "$1" in
+start)
+  /usr/local/bin/rtpproxy -l 1.2.3.4 -p /var/run/rtpproxy.pid
+  touch /var/run/rtpproxy.runs
+  ;;
+
+stop)
+  rm -f /var/run/rtpproxy.runs
+  /bin/kill -TERM `/bin/cat /var/run/rtpproxy.pid 2>/dev/null` 2>/dev/null
+  ;;
+
+esac
+----
+
+4. Add appropriate crontab(5) entry. If machine has multiple services to be
+monitored it makes sense to create a shell script and put multiple invocations
+of sipwd into it, in turn invoking that script from the cron(8).
