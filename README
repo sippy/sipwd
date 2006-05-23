@@ -25,7 +25,11 @@ running matches the <binfile>. For interpreted languages, like python or perl,
 
 The <pidfile> argument is name of the file which contains one of more PIDs
 corresponding for the service. The watchdog checks that all of those PIDs
-correspond to the running processes, whose binaries match <binfile>.
+correspond to the running processes, whose binaries match <binfile>. In the
+case when there are multiple PIDs in the <pidfile>, while some of them don't
+correspond to running processes matching <binfile>, the watchdog sends SIGTERM
+to ones that match followed by SIGKILL after a brief period and tries to start
+the service after they all exit.
 
 The <command> argument is the command to start the service in the case when
 watchdog finds that it is not running.
