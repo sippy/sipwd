@@ -28,6 +28,7 @@
  */
 
 #include <sys/param.h>
+#include <sys/mount.h>
 #include <sys/stat.h>
 #include <err.h>
 #include <signal.h>
@@ -67,24 +68,36 @@ int
 main(int argc, char **argv)
 {
     FILE *f;
-    int i, j, len, stillruns, ksig;
+    int i, j, len, stillruns;
+    int ksig = SIGTERM;
     char buf[256];
     char *runsfile, *binfile, *pidsfile, *startfile;
+    char *force_restart_file = NULL;
     int pids[256];
     struct stat sb;
+    struct statfs fs_stat;
+    int force_restart = 0;
 
     atexit(ehandler);
     glog = siplog_open("sipwd", NULL, LF_REOPEN);
     siplog_write(SIPLOG_ALL, glog, "sipwd started, pid %d", getpid());
 
-    if (argc != 5) {
-        siplog_write(SIPLOG_ERR, glog, "usage: sipwd runsfile binfile pidsfile startfile");
+    if (argc < 5 || argc > 6) {
+        siplog_write(SIPLOG_ERR, glog, "usage: sipwd runsfile binfile pidsfile startfile [ force_restart_file ]");
+        exit(1);
+    }
+    if (statfs("/proc", &fs_stat) == -1 ||
+        strcmp(fs_stat.f_fstypename, "procfs") != 0)
+    {
+        siplog_write(SIPLOG_ERR, glog, "the proc filesystem not mounted on /proc. Exiting...");
         exit(1);
     }
     runsfile = argv[1];
     binfile = argv[2];
     pidsfile = argv[3];
     startfile = argv[4];
+    if (argc == 6)
+        force_restart_file = argv[5];
     if (stat(runsfile, &sb) == -1)
         exit(0);
     f = fopen(pidsfile, "r");
@@ -105,28 +118,39 @@ main(int argc, char **argv)
         i = 0;
     }
     pids[i] = 0;
-    for (i = 0; pids[i] != 0; i++) {
-        sprintf(buf, "/proc/%d/cmdline", pids[i]);
-        f = fopen(buf, "r");
-        if (f == NULL) {
-            siplog_write(SIPLOG_ALL, glog, "%s pid %d is not running", binfile, pids[i]);
-            break;
-        }
-        len = fread(buf, 1, sizeof(buf) - 1, f);
-        fclose(f);
-        if (len == 0) {
-            siplog_write(SIPLOG_ALL, glog, "%s pid %d is not running", binfile, pids[i]);
-            break;
-        }
-        buf[len] = '\0';
-        if (!equal_basenames(buf, binfile)) {
-            siplog_write(SIPLOG_ALL, glog, "%s pid %d is not running", binfile, pids[i]);
-            break;
+    if (force_restart_file != NULL &&
+        stat(force_restart_file, &sb) != -1 &&
+        S_ISREG(sb.st_mode))
+    {
+        force_restart = 1;
+        siplog_write(SIPLOG_ALL, glog, "forcibly restarting %s", binfile);
+        i = 0;
+        ksig = SIGABRT;
+        unlink(force_restart_file);
+    }
+    else {
+        for (i = 0; pids[i] != 0; i++) {
+            sprintf(buf, "/proc/%d/cmdline", pids[i]);
+            f = fopen(buf, "r");
+            if (f == NULL) {
+                siplog_write(SIPLOG_ALL, glog, "%s pid %d is not running", binfile, pids[i]);
+                break;
+            }
+            len = fread(buf, 1, sizeof(buf) - 1, f);
+            fclose(f);
+            if (len == 0) {
+                siplog_write(SIPLOG_ALL, glog, "%s pid %d is not running", binfile, pids[i]);
+                break;
+            }
+            buf[len] = '\0';
+            if (!equal_basenames(buf, binfile)) {
+                siplog_write(SIPLOG_ALL, glog, "%s pid %d is not running", binfile, pids[i]);
+                break;
+            }
         }
     }
     if (i > 0 && pids[i] == 0)
         exit(0);
-    ksig = SIGTERM;
     for (j = 0; j < 10; j++) {
         stillruns = 0;
         for (i = 0; pids[i] != 0; i++) {

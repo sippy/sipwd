@@ -13,7 +13,7 @@ each minute by cron(8)) for each of the programs to be monitored. All
 necessary arguments are passed via the command line. The synopsis is as
 follows:
 
-sipwd <runfile> <binfile> <pidfile> <command>
+sipwd <runfile> <binfile> <pidfile> <command> [<force_restart_file>]
 
 The <runfile> argument is the name of the file which indicates that the
 service has been started. If <runfile> doesn't exist the watchdog just exits.
@@ -33,6 +33,16 @@ the service after they all exit.
 
 The <command> argument is the command to start the service in the case when
 watchdog finds that it is not running.
+
+The <force_restart_file> argument is optional and is used to forcibly restart 
+the monitored application. This is useful if the application starts working
+improperly. The sipwd itself cannot determine if application works properly 
+and relies on an external program instead to determine the state of the 
+application. When the detector program detects that the monitored application 
+is malfunctioning it must create the <force_restart_file>. After sipwd has 
+detected the <force_restart_file> it first kills the application with the 
+SIGABRT signal to try to create the coredump file and if unsuccessfull it 
+uses the SIGKILL signal.
 
 For example, the following command can be used to monitor rtpproxy service:
 
