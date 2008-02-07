@@ -30,6 +30,10 @@
 #include <sys/param.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
+#if defined(__linux__)
+#include <sys/statfs.h>
+#include <linux/proc_fs.h>
+#endif
 #include <err.h>
 #include <signal.h>
 #include <stdio.h>
@@ -49,6 +53,17 @@ ehandler(void)
     siplog_write(SIPLOG_ALL, glog, "sipwd ended");
     siplog_close(glog);
 }
+
+#if defined(__linux__)
+static size_t
+strlcpy(char *dst, const char *src, size_t size)
+{
+
+    dst[size - 1] = '\0';
+    strncpy(dst, src, size - 1);
+    return strlen(src);
+}
+#endif
 
 static int
 equal_basenames(const char *name1, const char *name2)
@@ -87,7 +102,11 @@ main(int argc, char **argv)
         exit(1);
     }
     if (statfs("/proc", &fs_stat) == -1 ||
+#if defined(__linux__)
+        fs_stat.f_type != PROC_SUPER_MAGIC)
+#else
         strcmp(fs_stat.f_fstypename, "procfs") != 0)
+#endif
     {
         siplog_write(SIPLOG_ERR, glog, "the proc filesystem not mounted on /proc. Exiting...");
         exit(1);
