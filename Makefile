@@ -33,6 +33,6 @@ WARNS?=	2
 LOCALBASE?=	/usr/local
 
 CFLAGS+=	-I${LOCALBASE}/include
-LDADD+=	-L${LOCALBASE}/lib -lsiplog
+LDADD+=	-L${LOCALBASE}/lib -lsiplog -lpthread
 
 .include <bsd.prog.mk>
