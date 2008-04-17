@@ -31,6 +31,7 @@ MAN1=
 WARNS?=	2
 
 LOCALBASE?=	/usr/local
+BINDIR?=	${LOCALBASE}/bin
 
 CFLAGS+=	-I${LOCALBASE}/include
 LDADD+=	-L${LOCALBASE}/lib -lsiplog -lpthread
