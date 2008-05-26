@@ -93,8 +93,8 @@ main(int argc, char **argv)
     struct statfs fs_stat;
     int force_restart = 0;
 
-    atexit(ehandler);
     glog = siplog_open("sipwd", NULL, LF_REOPEN);
+    atexit(ehandler);
     siplog_write(SIPLOG_ALL, glog, "sipwd started, pid %d", getpid());
 
     if (argc < 5 || argc > 6) {
