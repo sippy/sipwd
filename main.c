@@ -195,7 +195,7 @@ main(int argc, char **argv)
         siplog_write(SIPLOG_ALL, glog, "waiting for all %s to die", binfile);
         sleep(1);
     }
-    siplog_write(SIPLOG_ALL, glog, "starting %s", binfile);
+    siplog_write(SIPLOG_ALL, glog, "starting %s as %s", binfile, startfile);
     system(startfile);
     exit(0);
 }
