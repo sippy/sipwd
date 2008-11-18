@@ -33,7 +33,7 @@ WARNS?=	2
 LOCALBASE?=	/usr/local
 BINDIR?=	${LOCALBASE}/bin
 
-CFLAGS+=	-I${LOCALBASE}/include
-LDADD+=	-L${LOCALBASE}/lib -lsiplog -lpthread
+CFLAGS+=	-I../siplog -I${LOCALBASE}/include
+LDADD+=	-L../siplog -L${LOCALBASE}/lib -lsiplog -lpthread
 
 .include <bsd.prog.mk>
