@@ -22,9 +22,6 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * $Id$
- *
  */
 
 #include <sys/param.h>
@@ -79,6 +76,17 @@ equal_basenames(const char *name1, const char *name2)
     return 0 == strcmp(buf1, buf2);
 }
 
+static void
+usage()
+{
+    const char *us;
+
+    us = "usage: sipwd [-e] runsfile binfile pidsfile startfile [ force_restart_file ]";
+    siplog_write(SIPLOG_ERR, glog, us);
+    siplog_close(glog);
+    exit(1);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -92,14 +100,30 @@ main(int argc, char **argv)
     struct stat sb;
     struct statfs fs_stat;
     int force_restart = 0;
+    int eflag, ch;
 
     glog = siplog_open("sipwd", NULL, LF_REOPEN);
     atexit(ehandler);
+
+    eflag = 0;
+    while ((ch = getopt(argc, argv, "e")) != -1) {
+        switch (ch) {
+        case 'e':
+            eflag = 1;
+            break;
+
+        case '?':
+        default:
+            usage();
+        }
+     }
+    argc -= optind;
+    argv += optind;
+
     siplog_write(SIPLOG_ALL, glog, "sipwd started, pid %d", getpid());
 
-    if (argc < 5 || argc > 6) {
-        siplog_write(SIPLOG_ERR, glog, "usage: sipwd runsfile binfile pidsfile startfile [ force_restart_file ]");
-        exit(1);
+    if (argc < 4 || argc > 5) {
+        usage();
     }
     if (statfs("/proc", &fs_stat) == -1 ||
 #if defined(__linux__)
@@ -111,12 +135,12 @@ main(int argc, char **argv)
         siplog_write(SIPLOG_ERR, glog, "the proc filesystem not mounted on /proc. Exiting...");
         exit(1);
     }
-    runsfile = argv[1];
-    binfile = argv[2];
-    pidsfile = argv[3];
-    startfile = argv[4];
-    if (argc == 6)
-        force_restart_file = argv[5];
+    runsfile = argv[0];
+    binfile = argv[1];
+    pidsfile = argv[2];
+    startfile = argv[3];
+    if (argc == 5)
+        force_restart_file = argv[4];
     if (stat(runsfile, &sb) == -1)
         exit(0);
     f = fopen(pidsfile, "r");
@@ -195,9 +219,14 @@ main(int argc, char **argv)
         siplog_write(SIPLOG_ALL, glog, "waiting for all %s to die", binfile);
         sleep(1);
     }
+    
     siplog_write(SIPLOG_ALL, glog, "starting %s as %s", binfile, startfile);
-    system(startfile);
-    exit(0);
+    if (!eflag) {
+        system(startfile);
+        exit(0);
+    } else {
+        exit(1);
+    }
 }
 
 /* vim:ts=4:sts=4:sw=4:et:
