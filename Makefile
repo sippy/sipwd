@@ -24,6 +24,9 @@
 #
 # $Id$
 
+PKGNAME=	${PROG}
+PKGFILES=	GNUmakefile Makefile README ${SRCS}
+
 PROG=	sipwd
 SRCS=	main.c
 MAN1=
@@ -35,5 +38,12 @@ BINDIR?=	${LOCALBASE}/bin
 
 CFLAGS+=	-I../siplog -I${LOCALBASE}/include
 LDADD+=	-L../siplog -L${LOCALBASE}/lib -lsiplog -lpthread
+
+TSTAMP!=        date "+%Y%m%d%H%M%S"
+
+distribution: clean
+	tar cvfy /tmp/${PKGNAME}-sippy-${TSTAMP}.tbz2 ${PKGFILES}
+	git tag rel.${TSTAMP}
+	git push origin rel.${TSTAMP}
 
 .include <bsd.prog.mk>
