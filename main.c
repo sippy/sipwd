@@ -65,14 +65,12 @@ strlcpy(char *dst, const char *src, size_t size)
 static int
 equal_basenames(const char *name1, const char *name2)
 {
-    char buf1[MAXPATHLEN], buf2[MAXPATHLEN];
-    /*
-     * FIXME: BSD basename() returns pointer to internal static buffer.
-     * If some implementation makes in-place modification, as permitted
-     * by POSIX, this must be updated to reflect that fact.
-     */
-    strlcpy(buf1, basename(name1), sizeof(buf1));
-    strlcpy(buf2, basename(name2), sizeof(buf2));
+    char buf1[MAXPATHLEN], buf2[MAXPATHLEN], buf3[MAXPATHLEN];
+
+    strlcpy(buf2, name1, sizeof(buf2));
+    strlcpy(buf1, basename(buf2), sizeof(buf1));
+    strlcpy(buf3, name2, sizeof(buf3));
+    strlcpy(buf2, basename(buf3), sizeof(buf2));
     return 0 == strcmp(buf1, buf2);
 }
 
