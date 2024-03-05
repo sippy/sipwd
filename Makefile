@@ -41,10 +41,4 @@ LDADD+=	-L../siplog -L${LOCALBASE}/lib -lsiplog -lpthread
 
 TSTAMP!=        date "+%Y%m%d%H%M%S"
 
-distribution: clean
-	tar cvfy /tmp/${PKGNAME}-sippy-${TSTAMP}.tbz2 ${PKGFILES}
-	scp /tmp/${PKGNAME}-sippy-${TSTAMP}.tbz2 sobomax@download.sippysoft.com:/usr/local/www/data/${PKGNAME}/
-	git tag rel.${TSTAMP}
-	git push origin rel.${TSTAMP}
-
 .include <bsd.prog.mk>
