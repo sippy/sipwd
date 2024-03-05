@@ -47,7 +47,7 @@ static void
 ehandler(void)
 {
 
-    siplog_write(SIPLOG_DBUG, glog, "sipwd ended");
+    siplog_write(SIPLOG_INFO, glog, "sipwd ended");
     siplog_close(glog);
 }
 
@@ -118,7 +118,7 @@ main(int argc, char **argv)
     argc -= optind;
     argv += optind;
 
-    siplog_write(SIPLOG_DBUG, glog, "sipwd started, pid %d", getpid());
+    siplog_write(SIPLOG_INFO, glog, "sipwd started, pid %d", getpid());
 
     if (argc < 4 || argc > 5) {
         usage();
