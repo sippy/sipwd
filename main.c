@@ -118,7 +118,7 @@ main(int argc, char **argv)
     argc -= optind;
     argv += optind;
 
-    siplog_write(SIPLOG_INFO, glog, "sipwd started, pid %d", getpid());
+    siplog_write(SIPLOG_DBUG, glog, "sipwd started, pid %d", getpid());
 
     if (argc < 4 || argc > 5) {
         usage();
@@ -164,7 +164,7 @@ main(int argc, char **argv)
         S_ISREG(sb.st_mode))
     {
         force_restart = 1;
-        siplog_write(SIPLOG_ALL, glog, "forcibly restarting %s", binfile);
+        siplog_write(SIPLOG_INFO, glog, "forcibly restarting %s", binfile);
         i = 0;
         ksig = SIGABRT;
         unlink(force_restart_file);
@@ -174,18 +174,18 @@ main(int argc, char **argv)
             sprintf(buf, "/proc/%d/cmdline", pids[i]);
             f = fopen(buf, "r");
             if (f == NULL) {
-                siplog_write(SIPLOG_ALL, glog, "%s pid %d is not running", binfile, pids[i]);
+                siplog_write(SIPLOG_INFO, glog, "%s pid %d is not running", binfile, pids[i]);
                 break;
             }
             len = fread(buf, 1, sizeof(buf) - 1, f);
             fclose(f);
             if (len == 0) {
-                siplog_write(SIPLOG_ALL, glog, "%s pid %d is not running", binfile, pids[i]);
+                siplog_write(SIPLOG_INFO, glog, "%s pid %d is not running", binfile, pids[i]);
                 break;
             }
             buf[len] = '\0';
             if (!equal_basenames(buf, binfile)) {
-                siplog_write(SIPLOG_ALL, glog, "%s pid %d is not running", binfile, pids[i]);
+                siplog_write(SIPLOG_INFO, glog, "%s pid %d is not running", binfile, pids[i]);
                 break;
             }
         }
@@ -206,7 +206,7 @@ main(int argc, char **argv)
             buf[len] = '\0';
             if (!equal_basenames(buf, binfile))
                 continue;
-            siplog_write(SIPLOG_ALL, glog, "sending signal %d to %s pid %d", ksig, binfile, pids[i]);
+            siplog_write(SIPLOG_INFO, glog, "sending signal %d to %s pid %d", ksig, binfile, pids[i]);
             kill(pids[i], ksig);
             stillruns = 1;
         }
@@ -214,11 +214,11 @@ main(int argc, char **argv)
             break;
         if (j == 7)
             ksig = SIGKILL;
-        siplog_write(SIPLOG_ALL, glog, "waiting for all %s to die", binfile);
+        siplog_write(SIPLOG_INFO, glog, "waiting for all %s to die", binfile);
         sleep(1);
     }
     
-    siplog_write(SIPLOG_ALL, glog, "starting %s as %s", binfile, startfile);
+    siplog_write(SIPLOG_DBUG, glog, "starting %s as %s", binfile, startfile);
     if (!eflag) {
         system(startfile);
         exit(0);
