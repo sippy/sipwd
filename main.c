@@ -47,7 +47,7 @@ static void
 ehandler(void)
 {
 
-    siplog_write(SIPLOG_INFO, glog, "sipwd ended");
+    siplog_write(SIPLOG_DBUG, glog, "sipwd ended");
     siplog_close(glog);
 }
 
@@ -218,7 +218,7 @@ main(int argc, char **argv)
         sleep(1);
     }
     
-    siplog_write(SIPLOG_DBUG, glog, "starting %s as %s", binfile, startfile);
+    siplog_write(SIPLOG_INFO, glog, "starting %s as %s", binfile, startfile);
     if (!eflag) {
         system(startfile);
         exit(0);
