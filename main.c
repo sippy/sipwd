@@ -97,7 +97,6 @@ main(int argc, char **argv)
     int pids[256];
     struct stat sb;
     struct statfs fs_stat;
-    int force_restart = 0;
     int eflag, ch;
 
     glog = siplog_open("sipwd", NULL, LF_REOPEN);
@@ -163,7 +162,6 @@ main(int argc, char **argv)
         stat(force_restart_file, &sb) != -1 &&
         S_ISREG(sb.st_mode))
     {
-        force_restart = 1;
         siplog_write(SIPLOG_INFO, glog, "forcibly restarting %s", binfile);
         i = 0;
         ksig = SIGABRT;
